@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Zicket</title>
+  
+  <!-- PWA Theme Color & Apple Touch Support -->
+  <meta name="theme-color" content="#0d5c3a">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="QR Scanner">
+  
+  <!-- Google Fonts: Amiri & Hind Siliguri -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400&family=Hind+Siliguri:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <!-- HTML5 QR Code Library CDN -->
+  <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: {
+              DEFAULT: '#0d5c3a',
+              dark: '#073b24',
+              light: '#147a4e'
+            },
+            gold: {
+              DEFAULT: '#d4af37',
+              light: '#f9f3d9',
+              dark: '#aa8c2c'
+            }
+          },
+          fontFamily: {
+            sans: ['Hind Siliguri', 'sans-serif'],
+            arabic: ['Amiri', 'serif']
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    /* Islamic Geometric Background Pattern */
+    .islamic-bg {
+      background-color: #f4f6f8;
+      background-image: radial-gradient(rgba(13, 92, 58, 0.05) 0.75px, transparent 0.75px), radial-gradient(rgba(212, 175, 55, 0.05) 0.75px, transparent 0.75px);
+      background-size: 30px 30px;
+      background-position: 0 0, 15px 15px;
+    }
+
+    /* Animated Gold Border Accent */
+    .gold-gradient-border {
+      background: linear-gradient(135deg, #d4af37, #f9f3d9, #aa8c2c);
+      padding: 2px;
+      border-radius: 1.25rem;
+    }
+
+    /* Pulse animation for scanner laser guide */
+    @keyframes scan-laser {
+      0% { top: 10%; opacity: 0.8; }
+      50% { top: 85%; opacity: 1; }
+      100% { top: 10%; opacity: 0.8; }
+    }
+
+    .scanner-laser-line {
+      position: absolute;
+      left: 5%;
+      width: 90%;
+      height: 3px;
+      background: linear-gradient(90deg, transparent, #d4af37, #ffffff, #d4af37, transparent);
+      box-shadow: 0 0 12px 2px rgba(212, 175, 55, 0.8);
+      animation: scan-laser 2.5s infinite ease-in-out;
+    }
+
+    /* Hide native video elements html5-qrcode controls */
+    #reader video {
+      object-fit: cover !important;
+      border-radius: 1rem;
+    }
+    
+    #reader {
+      border: none !important;
+    }
+
+    #reader__scan_region {
+      background: transparent !important;
+    }
+
+    /* Custom Toast Message */
+    .toast {
+      transition: opacity 0.3s ease, transform 0.3s ease;
+    }
+  </style>
+
+  <!-- Dynamic Web App Manifest Injection -->
+  <script>
+    (function injectManifest() {
+      const manifestObj = {
+        name: "Zicket - QR Scanner",
+        short_name: "Zicket",
+        description: "Z-TechX Ticket & Data QR Code Scanner PWA",
+        start_url: "./",
+        display: "standalone",
+        background_color: "#0d5c3a",
+        theme_color: "#0d5c3a",
+        orientation: "portrait",
+        icons: [
+          {
+            src: "https://api.iconify.design/heroicons:qr-code-20-solid.svg?color=%23d4af37&width=192&height=192",
+            sizes: "192x192",
+            type: "image/svg+xml"
+          },
+          {
+            src: "https://api.iconify.design/heroicons:qr-code-20-solid.svg?color=%23d4af37&width=512&height=512",
+            sizes: "512x512",
+            type: "image/svg+xml"
+          }
+        ]
+      };
+      const manifestStr = JSON.stringify(manifestObj);
+      const blob = new Blob([manifestStr], { type: 'application/json' });
+      const manifestURL = URL.createObjectURL(blob);
+      const link = document.createElement('link');
+      link.rel = 'manifest';
+      link.href = manifestURL;
+      document.head.appendChild(link);
+    })();
+  </script>
+</head>
+<body class="islamic-bg font-sans min-h-screen text-slate-800 flex flex-col justify-between antialiased">
+
+  <!-- Header Section -->
+  <header class="bg-gradient-to-r from-primary-dark via-primary to-primary-dark text-white shadow-lg relative border-b-2 border-gold">
+    <div class="max-w-md mx-auto px-4 py-4 text-center">
+      <div class="font-arabic text-gold text-lg mb-0.5">বিসমিল্লাহির রহমানির রহিম</div>
+      <h1 class="text-xl font-bold tracking-wide flex items-center justify-center gap-2">
+        <i class="fa-solid fa-qrcode text-gold"></i>
+        Zicket - QR Scanner
+
+      </h1>
+      <p class="text-xs text-gold-light mt-1">ডিজিটাল টিকেট ও তথ্য দ্রুত যাচাইকরণ</p>
+    </div>
+
+    <!-- PWA Installation Banner Trigger (Mobile) -->
+    <button id="pwa-install-btn" class="hidden absolute right-3 top-4 bg-gold hover:bg-gold-dark text-primary-dark font-semibold px-2.5 py-1 rounded-full text-xs shadow transition-all flex items-center gap-1">
+      <i class="fa-solid fa-download"></i> ইন্সটল
+    </button>
+  </header>
+
+  <!-- Main Interactive Area -->
+  <main class="flex-1 max-w-md w-full mx-auto p-4 flex flex-col justify-center items-center relative">
+
+    <!-- INITIAL LANDING VIEW -->
+    <div id="view-initial" class="w-full text-center flex flex-col items-center py-6">
+      <!-- Decorative Emblem -->
+      <div class="w-24 h-24 bg-primary-dark rounded-full border-2 border-gold flex items-center justify-center shadow-xl mb-6 relative">
+        <i class="fa-solid fa-qrcode text-4xl text-gold"></i>
+        <div class="absolute -bottom-1 bg-gold text-primary-dark text-[10px] font-bold px-2 py-0.5 rounded-full">
+          PWA READY
+        </div>
+      </div>
+
+      <h2 class="text-lg font-bold text-slate-800 mb-2">ক্যামেরা দিয়ে QR Code স্ক্যান করুন</h2>
+      <p class="text-sm text-slate-600 max-w-xs mb-8 leading-relaxed">
+        টিকেট বা সনদের কিউআর কোড স্ক্যান করে তথ্য যাচাই করতে নিচের বাটনে চাপ দিন।
+      </p>
+
+      <!-- Primary Action Launch Button -->
+      <button id="btn-start-scan" class="w-full max-w-xs gold-gradient-border shadow-lg hover:shadow-2xl transition-all duration-300 transform active:scale-95 group">
+        <div class="bg-gradient-to-r from-primary to-primary-dark hover:from-primary-light hover:to-primary text-white font-bold py-4 px-6 rounded-[1.15rem] flex items-center justify-center gap-3">
+          <i class="fa-solid fa-camera text-gold text-xl group-hover:scale-110 transition-transform"></i>
+          <span class="text-lg tracking-wide">স্ক্যান চালু করুন</span>
+        </div>
+      </button>
+
+      <!-- Quick Hint -->
+      <div class="mt-8 text-xs text-slate-500 flex items-center justify-center gap-1.5">
+        <i class="fa-solid fa-shield-halved text-primary"></i>
+        <span>আপনার ক্যামেরার অনুমতি প্রয়োজন হবে</span>
+      </div>
+    </div>
+
+    <!-- SCANNER CAMERA VIEW -->
+    <div id="view-scanner" class="hidden w-full flex-col items-center">
+      <div class="w-full bg-slate-900 rounded-2xl overflow-hidden shadow-2xl border-2 border-gold relative">
+        
+        <!-- Top Camera Controls Overlay -->
+        <div class="absolute top-3 left-3 right-3 z-20 flex justify-between items-center bg-black/40 backdrop-blur-md px-3 py-2 rounded-xl text-white">
+          <span class="text-xs font-semibold flex items-center gap-1.5 text-gold">
+            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span> স্ক্যানিং চলছে...
+          </span>
+          
+          <div class="flex items-center gap-2">
+            <!-- Flash Toggle Button -->
+            <button id="btn-toggle-flash" title="ফ্ল্যাশ লাইট" class="w-8 h-8 rounded-lg bg-white/20 hover:bg-white/30 flex items-center justify-center text-xs transition">
+              <i class="fa-solid fa-bolt text-slate-300" id="flash-icon"></i>
+            </button>
+            <!-- Camera Flip Button -->
+            <button id="btn-switch-camera" title="ক্যামেরা পরিবর্তন" class="w-8 h-8 rounded-lg bg-white/20 hover:bg-white/30 flex items-center justify-center text-xs transition">
+              <i class="fa-solid fa-camera-rotate"></i>
+            </button>
+            <!-- Stop/Close Button -->
+            <button id="btn-stop-scan" title="বন্ধ করুন" class="w-8 h-8 rounded-lg bg-red-500/80 hover:bg-red-600 flex items-center justify-center text-xs transition text-white">
+              <i class="fa-solid fa-xmark"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Camera Render Region -->
+        <div class="relative w-full aspect-square bg-black">
+          <div id="reader" class="w-full h-full"></div>
+          
+          <!-- Custom Visual Scanner Frame Overlay -->
+          <div class="absolute inset-0 pointer-events-none border-[30px] border-black/40 flex items-center justify-center">
+            <div class="w-full h-full border-2 border-gold/70 rounded-lg relative">
+              <!-- Corner Brackets -->
+              <div class="absolute -top-1 -left-1 w-5 h-5 border-t-4 border-l-4 border-gold"></div>
+              <div class="absolute -top-1 -right-1 w-5 h-5 border-t-4 border-r-4 border-gold"></div>
+              <div class="absolute -bottom-1 -left-1 w-5 h-5 border-b-4 border-l-4 border-gold"></div>
+              <div class="absolute -bottom-1 -right-1 w-5 h-5 border-b-4 border-r-4 border-gold"></div>
+              
+              <!-- Laser Scanner Effect -->
+              <div class="scanner-laser-line"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Camera Status Footer -->
+        <div class="bg-primary-dark p-3 text-center text-xs text-gold-light">
+          কিউআর কোডটি ক্যামেরার ফ্রেমে মাঝখানে রাখুন 
+        </div>
+      </div>
+    </div>
+
+    <!-- SCANNED RESULT VIEW -->
+    <div id="view-result" class="hidden w-full flex-col items-center">
+      <div class="w-full bg-white rounded-2xl shadow-xl border border-gold/30 overflow-hidden">
+        
+        <!-- Result Header -->
+        <div class="bg-gradient-to-r from-primary to-primary-dark p-4 text-white flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <i class="fa-solid fa-circle-check text-gold text-lg"></i>
+            <h3 class="font-bold text-base">স্ক্যান সফল হয়েছে</h3>
+          </div>
+          <span id="result-type-badge" class="bg-gold text-primary-dark text-[10px] font-extrabold px-2 py-0.5 rounded-full uppercase tracking-wider">
+            TEXT
+          </span>
+        </div>
+
+        <!-- Result Content Details -->
+        <div class="p-5">
+          <p class="text-xs text-slate-500 font-medium mb-1">প্রাপ্ত তথ্য / পে-লোড:</p>
+          
+          <div id="result-content-box" class="bg-slate-50 border border-slate-200 rounded-xl p-4 text-sm font-mono break-all text-slate-800 max-h-48 overflow-y-auto mb-5 leading-relaxed shadow-inner">
+            <!-- Scanned Payload Text dynamically populates here -->
+          </div>
+
+          <!-- Action Buttons for Result -->
+          <div class="flex flex-col gap-2.5">
+            <!-- Dynamic Action (Open Link if URL) -->
+            <a id="btn-open-link" href="#" target="_blank" rel="noopener noreferrer" class="hidden w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 px-4 rounded-xl text-center text-sm transition flex items-center justify-center gap-2 shadow">
+              <i class="fa-solid fa-arrow-up-right-from-square"></i>
+              <span>লিংকে প্রবেশ করুন</span>
+            </a>
+
+            <!-- Copy Text Button -->
+            <button id="btn-copy-text" class="w-full bg-slate-100 hover:bg-slate-200 border border-slate-300 text-slate-700 font-semibold py-3 px-4 rounded-xl text-sm transition flex items-center justify-center gap-2">
+              <i class="fa-regular fa-copy"></i>
+              <span id="copy-btn-text">কপি করুন</span>
+            </button>
+
+            <!-- Scan Next Button -->
+            <button id="btn-scan-again" class="w-full bg-primary hover:bg-primary-dark text-white font-bold py-3 px-4 rounded-xl text-sm transition shadow flex items-center justify-center gap-2 mt-1">
+              <i class="fa-solid fa-rotate-right text-gold"></i>
+              <span>পুনরায় স্ক্যান করুন</span>
+            </button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Footer Navigation / Info -->
+  <footer class="bg-slate-900 text-slate-400 text-center py-3 text-xs border-t border-slate-800">
+    <div class="max-w-md mx-auto px-4 flex justify-between items-center">
+      <span>&copy; <a href="https://ztechx.com" target="_blank" rel="noopener noreferrer" class="text-gold hover:underline">Z-TechX</a></span>
+      <span class="text-gold font-semibold">v1.0.0</span>
+    </div>
+  </footer>
+
+  <!-- Toast Notification Container -->
+  <div id="toast-container" class="fixed bottom-14 left-1/2 -translate-x-1/2 z-50 pointer-events-none flex flex-col gap-2 w-11/12 max-w-xs"></div>
+
+  <!-- Application Logic JavaScript -->
+  <script>
+    // State Variables
+    let html5QrcodeScanner = null;
+    let currentCameraId = null;
+    let availableCameras = [];
+    let isFlashOn = false;
+    let deferredPrompt = null;
+    let scannedPayload = "";
+
+    // DOM Elements
+    const viewInitial = document.getElementById('view-initial');
+    const viewScanner = document.getElementById('view-scanner');
+    const viewResult = document.getElementById('view-result');
+    
+    const btnStartScan = document.getElementById('btn-start-scan');
+    const btnStopScan = document.getElementById('btn-stop-scan');
+    const btnSwitchCamera = document.getElementById('btn-switch-camera');
+    const btnToggleFlash = document.getElementById('btn-toggle-flash');
+    const flashIcon = document.getElementById('flash-icon');
+    
+    const resultContentBox = document.getElementById('result-content-box');
+    const resultTypeBadge = document.getElementById('result-type-badge');
+    const btnOpenLink = document.getElementById('btn-open-link');
+    const btnCopyText = document.getElementById('btn-copy-text');
+    const copyBtnText = document.getElementById('copy-btn-text');
+    const btnScanAgain = document.getElementById('btn-scan-again');
+    const pwaInstallBtn = document.getElementById('pwa-install-btn');
+
+    // Helper: Toast Notifications
+    function showToast(message, type = 'info') {
+      const container = document.getElementById('toast-container');
+      const toast = document.createElement('div');
+      
+      const bgClass = type === 'error' ? 'bg-red-600' : (type === 'success' ? 'bg-emerald-700' : 'bg-slate-800');
+      
+      toast.className = `toast ${bgClass} text-white text-xs font-medium px-4 py-2.5 rounded-xl shadow-lg border border-white/20 text-center transform translate-y-2 opacity-0`;
+      toast.textContent = message;
+      
+      container.appendChild(toast);
+
+      // Trigger animation
+      setTimeout(() => {
+        toast.classList.remove('translate-y-2', 'opacity-0');
+      }, 10);
+
+      setTimeout(() => {
+        toast.classList.add('opacity-0', 'translate-y-2');
+        setTimeout(() => toast.remove(), 300);
+      }, 2500);
+    }
+
+    // View Switcher
+    function setActiveView(view) {
+      viewInitial.classList.add('hidden');
+      viewScanner.classList.add('hidden');
+      viewResult.classList.add('hidden');
+
+      if (view === 'initial') viewInitial.classList.remove('hidden');
+      if (view === 'scanner') viewScanner.classList.remove('hidden');
+      if (view === 'result') viewResult.classList.remove('hidden');
+    }
+
+    // Initialize Camera Scanner
+    async function startCameraScanner() {
+      setActiveView('scanner');
+
+      try {
+        // Request Available Video Devices
+        const devices = await Html5Qrcode.getCameras();
+        
+        if (!devices || devices.length === 0) {
+          showToast('কোনো ক্যামেরা পাওয়া যায়নি!', 'error');
+          setActiveView('initial');
+          return;
+        }
+
+        availableCameras = devices;
+        
+        // Prefer Environment / Back Camera
+        let backCamera = devices.find(device => 
+          device.label.toLowerCase().includes('back') || 
+          device.label.toLowerCase().includes('rear') ||
+          device.label.toLowerCase().includes('environment')
+        );
+
+        currentCameraId = backCamera ? backCamera.id : devices[0].id;
+
+        // Instantiating Html5Qrcode Reader
+        html5QrcodeScanner = new Html5Qrcode("reader");
+
+        const config = {
+          fps: 15,
+          qrbox: { width: 220, height: 220 },
+          aspectRatio: 1.0
+        };
+
+        await html5QrcodeScanner.start(
+          currentCameraId, 
+          config, 
+          onScanSuccess, 
+          onScanFailure
+        );
+
+        // Check flashlight capability after camera start
+        checkFlashSupport();
+
+      } catch (err) {
+        console.error("Camera Initialization Error:", err);
+        showToast('ক্যামেরা চালুর অনুমতি পাওয়া যায়নি!', 'error');
+        setActiveView('initial');
+      }
+    }
+
+    // Scanner Success Callback
+    function onScanSuccess(decodedText, decodedResult) {
+      // Vibrate on successful scan if supported
+      if (navigator.vibrate) {
+        navigator.vibrate(120);
+      }
+
+      scannedPayload = decodedText;
+      stopCameraScanner().then(() => {
+        handleScannedPayload(decodedText);
+      });
+    }
+
+    function onScanFailure(error) {
+      // Silent ignore for continuous scan frame checks
+    }
+
+    // Stop Camera Scanner
+    async function stopCameraScanner() {
+      if (html5QrcodeScanner && html5QrcodeScanner.isScanning) {
+        try {
+          await html5QrcodeScanner.stop();
+          html5QrcodeScanner.clear();
+        } catch (err) {
+          console.error("Error stopping camera:", err);
+        }
+      }
+      isFlashOn = false;
+      updateFlashIcon();
+    }
+
+    // Handle Payload Output
+    function handleScannedPayload(payload) {
+      resultContentBox.textContent = payload;
+      
+      // Basic URL regex test
+      const isUrl = /^https?:\/\/[^\s/$.?#].[^\s]*$/i.test(payload.trim());
+
+      if (isUrl) {
+        resultTypeBadge.textContent = "WEB LINK";
+        resultTypeBadge.className = "bg-emerald-500 text-white text-[10px] font-extrabold px-2 py-0.5 rounded-full uppercase tracking-wider";
+        btnOpenLink.href = payload.trim();
+        btnOpenLink.classList.remove('hidden');
+      } else {
+        resultTypeBadge.textContent = "TEXT / DATA";
+        resultTypeBadge.className = "bg-gold text-primary-dark text-[10px] font-extrabold px-2 py-0.5 rounded-full uppercase tracking-wider";
+        btnOpenLink.classList.add('hidden');
+      }
+
+      setActiveView('result');
+    }
+
+    // Switch Front/Back Camera
+    async function switchCamera() {
+      if (availableCameras.length <= 1) {
+        showToast('অন্য কোনো ক্যামেরা ডিভাইস নেই', 'info');
+        return;
+      }
+
+      const currentIndex = availableCameras.findIndex(cam => cam.id === currentCameraId);
+      const nextIndex = (currentIndex + 1) % availableCameras.length;
+      currentCameraId = availableCameras[nextIndex].id;
+
+      showToast('ক্যামেরা পরিবর্তন হচ্ছে...', 'info');
+      await stopCameraScanner();
+      
+      // Re-start with new camera ID
+      html5QrcodeScanner = new Html5Qrcode("reader");
+      await html5QrcodeScanner.start(
+        currentCameraId, 
+        { fps: 15, qrbox: { width: 220, height: 220 } }, 
+        onScanSuccess, 
+        onScanFailure
+      );
+      checkFlashSupport();
+    }
+
+    // Flash Support Check & Toggle
+    async function checkFlashSupport() {
+      try {
+        if (html5QrcodeScanner && html5QrcodeScanner.isScanning) {
+          const capabilities = html5QrcodeScanner.getRunningTrackCapabilities();
+          if (!capabilities.torch) {
+            btnToggleFlash.style.opacity = '0.5';
+          } else {
+            btnToggleFlash.style.opacity = '1';
+          }
+        }
+      } catch (e) {
+        btnToggleFlash.style.opacity = '0.5';
+      }
+    }
+
+    async function toggleFlash() {
+      if (!html5QrcodeScanner || !html5QrcodeScanner.isScanning) return;
+
+      try {
+        isFlashOn = !isFlashOn;
+        await html5QrcodeScanner.applyVideoConstraints({
+          advanced: [{ torch: isFlashOn }]
+        });
+        updateFlashIcon();
+        showToast(isFlashOn ? 'ফ্ল্যাশ লাইট চালু' : 'ফ্ল্যাশ লাইট বন্ধ', 'info');
+      } catch (err) {
+        showToast('এই ডিভাইসে ফ্ল্যাশ সাপোর্টেড নয়', 'error');
+        isFlashOn = false;
+        updateFlashIcon();
+      }
+    }
+
+    function updateFlashIcon() {
+      if (isFlashOn) {
+        flashIcon.className = "fa-solid fa-bolt text-gold";
+      } else {
+        flashIcon.className = "fa-solid fa-bolt text-slate-300";
+      }
+    }
+
+    // Copy to Clipboard fallback safely for iframe environment
+    function copyToClipboard(text) {
+      try {
+        const textArea = document.createElement("textarea");
+        textArea.value = text;
+        textArea.style.position = "fixed";
+        textArea.style.left = "-999999px";
+        document.body.appendChild(textArea);
+        textArea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textArea);
+        
+        copyBtnText.textContent = "কপি করা হয়েছে!";
+        showToast("ক্লিপবোর্ডে কপি সম্পন্ন!", "success");
+        setTimeout(() => { copyBtnText.textContent = "কপি করুন"; }, 2000);
+      } catch (err) {
+        showToast("কপি করা সম্ভব হয়নি", "error");
+      }
+    }
+
+    // EVENT LISTENERS
+    btnStartScan.addEventListener('click', startCameraScanner);
+    
+    btnStopScan.addEventListener('click', async () => {
+      await stopCameraScanner();
+      setActiveView('initial');
+    });
+
+    btnSwitchCamera.addEventListener('click', switchCamera);
+    btnToggleFlash.addEventListener('click', toggleFlash);
+
+    btnCopyText.addEventListener('click', () => {
+      if (scannedPayload) copyToClipboard(scannedPayload);
+    });
+
+    btnScanAgain.addEventListener('click', () => {
+      startCameraScanner();
+    });
+
+    // PWA Add to Home Screen Prompt Handling
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      pwaInstallBtn.classList.remove('hidden');
+    });
+
+    pwaInstallBtn.addEventListener('click', async () => {
+      if (deferredPrompt) {
+        deferredPrompt.prompt();
+        const { outcome } = await deferredPrompt.userChoice;
+        if (outcome === 'accepted') {
+          showToast('অ্যাপ ইন্সটল করা হয়েছে!', 'success');
+        }
+        deferredPrompt = null;
+        pwaInstallBtn.classList.add('hidden');
+      }
+    });
+
+    // Inline Service Worker Registration for PWA Offline Capability
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        const swCode = `
+          const CACHE_NAME = 'mahafil-qr-v1';
+          self.addEventListener('install', (e) => {
+            self.skipWaiting();
+          });
+          self.addEventListener('activate', (e) => {
+            e.waitUntil(clients.claim());
+          });
+          self.addEventListener('fetch', (e) => {
+            e.respondWith(
+              fetch(e.request).catch(() => caches.match(e.request))
+            );
+          });
+        `;
+        const blob = new Blob([swCode], { type: 'text/javascript' });
+        const swUrl = URL.createObjectURL(blob);
+        
+        navigator.serviceWorker.register(swUrl)
+          .then(() => console.log('PWA Service Worker Registered'))
+          .catch(err => console.log('SW Registration failed:', err));
+      });
+    }
+  </script>
+</body>
+</html>
