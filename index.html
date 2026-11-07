@@ -82,7 +82,7 @@
       animation: scan-laser 2.5s infinite ease-in-out;
     }
 
-    /* Hide native video elements html5-qrcode controls */
+    /* Native camera adjustments */
     #reader video {
       object-fit: cover !important;
       border-radius: 1rem;
@@ -96,9 +96,48 @@
       background: transparent !important;
     }
 
-    /* Custom Toast Message */
+    /* Toast Animation */
     .toast {
       transition: opacity 0.3s ease, transform 0.3s ease;
+    }
+
+    /* TICKET SHAPE STYLING WITH CORNER NOTCHES */
+    .ticket-container {
+      position: relative;
+      border-radius: 18px;
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15);
+      border: 2px solid #111;
+      overflow: hidden;
+      transition: all 0.4s ease;
+    }
+
+    /* Classic Ticket Corner Cutouts */
+    .ticket-notch {
+      position: absolute;
+      width: 24px;
+      height: 24px;
+      background-color: #f4f6f8;
+      border-radius: 50%;
+      border: 2px solid #111;
+      z-index: 10;
+    }
+    .ticket-notch-top-left { top: -13px; left: -13px; }
+    .ticket-notch-top-right { top: -13px; right: -13px; }
+    .ticket-notch-bottom-left { bottom: -13px; left: -13px; }
+    .ticket-notch-bottom-right { bottom: -13px; right: -13px; }
+
+    /* Metallic Gold Metallic Gradient for Paid Status */
+    .ticket-paid {
+      background: linear-gradient(135deg, #bf953f 0%, #fcf6ba 25%, #b38728 50%, #fbf5b7 75%, #aa771c 100%);
+      color: #1a1a1a;
+      border-color: #795516;
+    }
+
+    /* Gray Metallic Gradient for Unpaid / Pending Status */
+    .ticket-unpaid {
+      background: linear-gradient(135deg, #e0e0e0 0%, #f5f5f5 35%, #bdbdbd 70%, #9e9e9e 100%);
+      color: #333333;
+      border-color: #616161;
     }
   </style>
 
@@ -106,9 +145,9 @@
   <script>
     (function injectManifest() {
       const manifestObj = {
-        name: "Zicket - QR Scanner",
+        name: "Z-TechX Ticket Scanner",
         short_name: "Zicket",
-        description: "Z-TechX Ticket & Data QR Code Scanner PWA",
+        description: "Ticket & Data QR Code Scanner PWA",
         start_url: "./",
         display: "standalone",
         background_color: "#0d5c3a",
@@ -145,24 +184,22 @@
       <div class="font-arabic text-gold text-lg mb-0.5">বিসমিল্লাহির রহমানির রহিম</div>
       <h1 class="text-xl font-bold tracking-wide flex items-center justify-center gap-2">
         <i class="fa-solid fa-qrcode text-gold"></i>
-        Zicket - QR Scanner
-
+        Zicket
       </h1>
       <p class="text-xs text-gold-light mt-1">ডিজিটাল টিকেট ও তথ্য দ্রুত যাচাইকরণ</p>
     </div>
 
-    <!-- PWA Installation Banner Trigger (Mobile) -->
+    <!-- PWA Install Button -->
     <button id="pwa-install-btn" class="hidden absolute right-3 top-4 bg-gold hover:bg-gold-dark text-primary-dark font-semibold px-2.5 py-1 rounded-full text-xs shadow transition-all flex items-center gap-1">
       <i class="fa-solid fa-download"></i> ইন্সটল
     </button>
   </header>
 
-  <!-- Main Interactive Area -->
+  <!-- Main Interactive Container -->
   <main class="flex-1 max-w-md w-full mx-auto p-4 flex flex-col justify-center items-center relative">
 
-    <!-- INITIAL LANDING VIEW -->
+    <!-- LANDING VIEW -->
     <div id="view-initial" class="w-full text-center flex flex-col items-center py-6">
-      <!-- Decorative Emblem -->
       <div class="w-24 h-24 bg-primary-dark rounded-full border-2 border-gold flex items-center justify-center shadow-xl mb-6 relative">
         <i class="fa-solid fa-qrcode text-4xl text-gold"></i>
         <div class="absolute -bottom-1 bg-gold text-primary-dark text-[10px] font-bold px-2 py-0.5 rounded-full">
@@ -175,7 +212,6 @@
         টিকেট বা সনদের কিউআর কোড স্ক্যান করে তথ্য যাচাই করতে নিচের বাটনে চাপ দিন।
       </p>
 
-      <!-- Primary Action Launch Button -->
       <button id="btn-start-scan" class="w-full max-w-xs gold-gradient-border shadow-lg hover:shadow-2xl transition-all duration-300 transform active:scale-95 group">
         <div class="bg-gradient-to-r from-primary to-primary-dark hover:from-primary-light hover:to-primary text-white font-bold py-4 px-6 rounded-[1.15rem] flex items-center justify-center gap-3">
           <i class="fa-solid fa-camera text-gold text-xl group-hover:scale-110 transition-transform"></i>
@@ -183,10 +219,9 @@
         </div>
       </button>
 
-      <!-- Quick Hint -->
       <div class="mt-8 text-xs text-slate-500 flex items-center justify-center gap-1.5">
         <i class="fa-solid fa-shield-halved text-primary"></i>
-        <span>আপনার ক্যামেরার অনুমতি প্রয়োজন হবে</span>
+        <span>আপনার ব্রাউজারে ক্যামেরার অনুমতি প্রয়োজন হবে</span>
       </div>
     </div>
 
@@ -194,126 +229,142 @@
     <div id="view-scanner" class="hidden w-full flex-col items-center">
       <div class="w-full bg-slate-900 rounded-2xl overflow-hidden shadow-2xl border-2 border-gold relative">
         
-        <!-- Top Camera Controls Overlay -->
+        <!-- Controls Header -->
         <div class="absolute top-3 left-3 right-3 z-20 flex justify-between items-center bg-black/40 backdrop-blur-md px-3 py-2 rounded-xl text-white">
           <span class="text-xs font-semibold flex items-center gap-1.5 text-gold">
             <span class="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span> স্ক্যানিং চলছে...
           </span>
           
           <div class="flex items-center gap-2">
-            <!-- Flash Toggle Button -->
             <button id="btn-toggle-flash" title="ফ্ল্যাশ লাইট" class="w-8 h-8 rounded-lg bg-white/20 hover:bg-white/30 flex items-center justify-center text-xs transition">
               <i class="fa-solid fa-bolt text-slate-300" id="flash-icon"></i>
             </button>
-            <!-- Camera Flip Button -->
             <button id="btn-switch-camera" title="ক্যামেরা পরিবর্তন" class="w-8 h-8 rounded-lg bg-white/20 hover:bg-white/30 flex items-center justify-center text-xs transition">
               <i class="fa-solid fa-camera-rotate"></i>
             </button>
-            <!-- Stop/Close Button -->
             <button id="btn-stop-scan" title="বন্ধ করুন" class="w-8 h-8 rounded-lg bg-red-500/80 hover:bg-red-600 flex items-center justify-center text-xs transition text-white">
               <i class="fa-solid fa-xmark"></i>
             </button>
           </div>
         </div>
 
-        <!-- Camera Render Region -->
+        <!-- Camera Viewport -->
         <div class="relative w-full aspect-square bg-black">
           <div id="reader" class="w-full h-full"></div>
           
-          <!-- Custom Visual Scanner Frame Overlay -->
           <div class="absolute inset-0 pointer-events-none border-[30px] border-black/40 flex items-center justify-center">
             <div class="w-full h-full border-2 border-gold/70 rounded-lg relative">
-              <!-- Corner Brackets -->
               <div class="absolute -top-1 -left-1 w-5 h-5 border-t-4 border-l-4 border-gold"></div>
               <div class="absolute -top-1 -right-1 w-5 h-5 border-t-4 border-r-4 border-gold"></div>
               <div class="absolute -bottom-1 -left-1 w-5 h-5 border-b-4 border-l-4 border-gold"></div>
               <div class="absolute -bottom-1 -right-1 w-5 h-5 border-b-4 border-r-4 border-gold"></div>
               
-              <!-- Laser Scanner Effect -->
               <div class="scanner-laser-line"></div>
             </div>
           </div>
         </div>
 
-        <!-- Camera Status Footer -->
         <div class="bg-primary-dark p-3 text-center text-xs text-gold-light">
-          কিউআর কোডটি ক্যামেরার ফ্রেমে মাঝখানে রাখুন 
+          কিউআর কোডটি ক্যামেরার ফ্রেমে মাঝখানে রাখুন
         </div>
       </div>
     </div>
 
-    <!-- SCANNED RESULT VIEW -->
+    <!-- DYNAMIC GRAPHICAL TICKET VIEW -->
     <div id="view-result" class="hidden w-full flex-col items-center">
-      <div class="w-full bg-white rounded-2xl shadow-xl border border-gold/30 overflow-hidden">
-        
-        <!-- Result Header -->
-        <div class="bg-gradient-to-r from-primary to-primary-dark p-4 text-white flex items-center justify-between">
-          <div class="flex items-center gap-2">
-            <i class="fa-solid fa-circle-check text-gold text-lg"></i>
-            <h3 class="font-bold text-base">স্ক্যান সফল হয়েছে</h3>
-          </div>
-          <span id="result-type-badge" class="bg-gold text-primary-dark text-[10px] font-extrabold px-2 py-0.5 rounded-full uppercase tracking-wider">
-            TEXT
+      
+      <!-- REAL TICKET SHAPE CARD -->
+      <div id="ticket-card" class="ticket-container ticket-paid w-full p-6 text-center mb-6">
+        <!-- Ticket Corner Cutouts -->
+        <div class="ticket-notch ticket-notch-top-left"></div>
+        <div class="ticket-notch ticket-notch-top-right"></div>
+        <div class="ticket-notch ticket-notch-bottom-left"></div>
+        <div class="ticket-notch ticket-notch-bottom-right"></div>
+
+        <!-- TOP BAR: SL / UNIQUE ID -->
+        <div class="flex justify-between items-center border-b border-black/20 pb-3 mb-4 text-xs font-bold tracking-wider uppercase">
+          <span class="flex items-center gap-1">
+            <i class="fa-solid fa-ticket"></i> SL: <span id="ticket-sl">---</span>
+          </span>
+          <span class="flex items-center gap-1">
+            ID: <span id="ticket-id-top">--------</span>
           </span>
         </div>
 
-        <!-- Result Content Details -->
-        <div class="p-5">
-          <p class="text-xs text-slate-500 font-medium mb-1">প্রাপ্ত তথ্য / পে-লোড:</p>
-          
-          <div id="result-content-box" class="bg-slate-50 border border-slate-200 rounded-xl p-4 text-sm font-mono break-all text-slate-800 max-h-48 overflow-y-auto mb-5 leading-relaxed shadow-inner">
-            <!-- Scanned Payload Text dynamically populates here -->
+        <!-- CENTER CONTENT: DECORATIVE LINES, STARS, NAME & PHONE -->
+        <div class="py-2">
+          <!-- Top Ornamental Line with Stars -->
+          <div class="flex items-center justify-center gap-2 mb-3">
+            <div class="h-[1px] bg-black/40 flex-1 max-w-[60px]"></div>
+            <div class="text-xs space-x-1">★ ★ ★ ★ ★</div>
+            <div class="h-[1px] bg-black/40 flex-1 max-w-[60px]"></div>
           </div>
 
-          <!-- Action Buttons for Result -->
-          <div class="flex flex-col gap-2.5">
-            <!-- Dynamic Action (Open Link if URL) -->
-            <a id="btn-open-link" href="#" target="_blank" rel="noopener noreferrer" class="hidden w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 px-4 rounded-xl text-center text-sm transition flex items-center justify-center gap-2 shadow">
-              <i class="fa-solid fa-arrow-up-right-from-square"></i>
-              <span>লিংকে প্রবেশ করুন</span>
-            </a>
+          <!-- EVENT TITLE / ADMIT BRANDING -->
+          <div id="ticket-badge-title" class="text-xs font-black tracking-widest uppercase mb-1">
+            GOLDEN TICKET
+          </div>
 
-            <!-- Copy Text Button -->
-            <button id="btn-copy-text" class="w-full bg-slate-100 hover:bg-slate-200 border border-slate-300 text-slate-700 font-semibold py-3 px-4 rounded-xl text-sm transition flex items-center justify-center gap-2">
-              <i class="fa-regular fa-copy"></i>
-              <span id="copy-btn-text">কপি করুন</span>
-            </button>
+          <!-- VISITOR NAME -->
+          <h2 id="ticket-name" class="text-2xl font-black tracking-wide my-1 drop-shadow-sm leading-tight">
+            ---
+          </h2>
 
-            <!-- Scan Next Button -->
-            <button id="btn-scan-again" class="w-full bg-primary hover:bg-primary-dark text-white font-bold py-3 px-4 rounded-xl text-sm transition shadow flex items-center justify-center gap-2 mt-1">
-              <i class="fa-solid fa-rotate-right text-gold"></i>
-              <span>পুনরায় স্ক্যান করুন</span>
-            </button>
+          <!-- PHONE NUMBER -->
+          <p id="ticket-phone" class="text-base font-bold font-mono tracking-wider opacity-90 my-1">
+            ---
+          </p>
+
+          <!-- PAYMENT STATUS BADGE -->
+          <div class="mt-4 mb-2">
+            <span id="ticket-status-pill" class="inline-block px-4 py-1.5 rounded-full text-xs font-black tracking-widest uppercase shadow-sm border border-black/20 bg-black text-white">
+              PAID
+            </span>
+          </div>
+
+          <!-- Bottom Ornamental Line with Stars -->
+          <div class="flex items-center justify-center gap-2 mt-3">
+            <div class="h-[1px] bg-black/40 flex-1 max-w-[60px]"></div>
+            <div class="text-xs space-x-1">★ ★ ★ ★ ★</div>
+            <div class="h-[1px] bg-black/40 flex-1 max-w-[60px]"></div>
           </div>
         </div>
 
+        <!-- BOTTOM BAR: UNIQUE ID & ADMIT LABEL -->
+        <div class="flex justify-between items-center border-t border-black/20 pt-3 mt-4 text-xs font-bold tracking-wider uppercase">
+          <span>ADMIT ONE</span>
+          <span>ID: <span id="ticket-id-bottom">--------</span></span>
+        </div>
       </div>
+
+      <!-- SCAN AGAIN ACTION BUTTON -->
+      <button id="btn-scan-again" class="w-full bg-primary hover:bg-primary-dark text-white font-bold py-3.5 px-4 rounded-xl text-sm transition shadow-lg flex items-center justify-center gap-2">
+        <i class="fa-solid fa-rotate-right text-gold"></i>
+        <span>পুনরায় স্ক্যান করুন</span>
+      </button>
+
     </div>
 
   </main>
 
-  <!-- Footer Navigation / Info -->
   <footer class="bg-slate-900 text-slate-400 text-center py-3 text-xs border-t border-slate-800">
     <div class="max-w-md mx-auto px-4 flex justify-between items-center">
-      <span>&copy; <a href="https://ztechx.com" target="_blank" rel="noopener noreferrer" class="text-gold hover:underline">Z-TechX</a></span>
+      <span>&copy; ইসলামী মাহফিল ডিজিটাল সার্ভিস</span>
       <span class="text-gold font-semibold">v1.0.0</span>
     </div>
   </footer>
 
-  <!-- Toast Notification Container -->
   <div id="toast-container" class="fixed bottom-14 left-1/2 -translate-x-1/2 z-50 pointer-events-none flex flex-col gap-2 w-11/12 max-w-xs"></div>
 
-  <!-- Application Logic JavaScript -->
   <script>
-    // State Variables
+    // Global Scanner State
     let html5QrcodeScanner = null;
     let currentCameraId = null;
     let availableCameras = [];
     let isFlashOn = false;
     let deferredPrompt = null;
-    let scannedPayload = "";
 
-    // DOM Elements
+    // Element References
     const viewInitial = document.getElementById('view-initial');
     const viewScanner = document.getElementById('view-scanner');
     const viewResult = document.getElementById('view-result');
@@ -324,38 +375,37 @@
     const btnToggleFlash = document.getElementById('btn-toggle-flash');
     const flashIcon = document.getElementById('flash-icon');
     
-    const resultContentBox = document.getElementById('result-content-box');
-    const resultTypeBadge = document.getElementById('result-type-badge');
-    const btnOpenLink = document.getElementById('btn-open-link');
-    const btnCopyText = document.getElementById('btn-copy-text');
-    const copyBtnText = document.getElementById('copy-btn-text');
     const btnScanAgain = document.getElementById('btn-scan-again');
     const pwaInstallBtn = document.getElementById('pwa-install-btn');
 
-    // Helper: Toast Notifications
+    // Ticket DOM Elements
+    const ticketCard = document.getElementById('ticket-card');
+    const ticketSl = document.getElementById('ticket-sl');
+    const ticketIdTop = document.getElementById('ticket-id-top');
+    const ticketIdBottom = document.getElementById('ticket-id-bottom');
+    const ticketName = document.getElementById('ticket-name');
+    const ticketPhone = document.getElementById('ticket-phone');
+    const ticketBadgeTitle = document.getElementById('ticket-badge-title');
+    const ticketStatusPill = document.getElementById('ticket-status-pill');
+
+    // Notification Helper
     function showToast(message, type = 'info') {
       const container = document.getElementById('toast-container');
       const toast = document.createElement('div');
-      
       const bgClass = type === 'error' ? 'bg-red-600' : (type === 'success' ? 'bg-emerald-700' : 'bg-slate-800');
       
       toast.className = `toast ${bgClass} text-white text-xs font-medium px-4 py-2.5 rounded-xl shadow-lg border border-white/20 text-center transform translate-y-2 opacity-0`;
       toast.textContent = message;
-      
       container.appendChild(toast);
 
-      // Trigger animation
-      setTimeout(() => {
-        toast.classList.remove('translate-y-2', 'opacity-0');
-      }, 10);
-
+      setTimeout(() => toast.classList.remove('translate-y-2', 'opacity-0'), 10);
       setTimeout(() => {
         toast.classList.add('opacity-0', 'translate-y-2');
         setTimeout(() => toast.remove(), 300);
       }, 2500);
     }
 
-    // View Switcher
+    // View Navigation
     function setActiveView(view) {
       viewInitial.classList.add('hidden');
       viewScanner.classList.add('hidden');
@@ -366,14 +416,12 @@
       if (view === 'result') viewResult.classList.remove('hidden');
     }
 
-    // Initialize Camera Scanner
+    // Start Camera & Reader
     async function startCameraScanner() {
       setActiveView('scanner');
 
       try {
-        // Request Available Video Devices
         const devices = await Html5Qrcode.getCameras();
-        
         if (!devices || devices.length === 0) {
           showToast('কোনো ক্যামেরা পাওয়া যায়নি!', 'error');
           setActiveView('initial');
@@ -381,8 +429,6 @@
         }
 
         availableCameras = devices;
-        
-        // Prefer Environment / Back Camera
         let backCamera = devices.find(device => 
           device.label.toLowerCase().includes('back') || 
           device.label.toLowerCase().includes('rear') ||
@@ -390,48 +436,34 @@
         );
 
         currentCameraId = backCamera ? backCamera.id : devices[0].id;
-
-        // Instantiating Html5Qrcode Reader
         html5QrcodeScanner = new Html5Qrcode("reader");
-
-        const config = {
-          fps: 15,
-          qrbox: { width: 220, height: 220 },
-          aspectRatio: 1.0
-        };
 
         await html5QrcodeScanner.start(
           currentCameraId, 
-          config, 
+          { fps: 15, qrbox: { width: 220, height: 220 }, aspectRatio: 1.0 }, 
           onScanSuccess, 
           onScanFailure
         );
 
-        // Check flashlight capability after camera start
         checkFlashSupport();
-
       } catch (err) {
-        console.error("Camera Initialization Error:", err);
+        console.error("Camera Init Error:", err);
         showToast('ক্যামেরা চালুর অনুমতি পাওয়া যায়নি!', 'error');
         setActiveView('initial');
       }
     }
 
-    // Scanner Success Callback
+    // SCAN SUCCESS CALLBACK
     function onScanSuccess(decodedText, decodedResult) {
-      // Vibrate on successful scan if supported
-      if (navigator.vibrate) {
-        navigator.vibrate(120);
-      }
+      if (navigator.vibrate) navigator.vibrate(120);
 
-      scannedPayload = decodedText;
       stopCameraScanner().then(() => {
-        handleScannedPayload(decodedText);
+        handleCustomScannedData(decodedText);
       });
     }
 
     function onScanFailure(error) {
-      // Silent ignore for continuous scan frame checks
+      // Continuous scanning frame check (ignored)
     }
 
     // Stop Camera Scanner
@@ -448,28 +480,70 @@
       updateFlashIcon();
     }
 
-    // Handle Payload Output
-    function handleScannedPayload(payload) {
-      resultContentBox.textContent = payload;
-      
-      // Basic URL regex test
-      const isUrl = /^https?:\/\/[^\s/$.?#].[^\s]*$/i.test(payload.trim());
+    // =========================================================================
+    // PARSE QR TEXT & BUILD GRAPHICAL GOLDEN / GRAY TICKET
+    // Expected Payload: SL: 6 | Name: Saadat | Phone: 17141586325 | ID: 154684241 | Status: Paid
+    // =========================================================================
+    function handleCustomScannedData(scannedResult) {
+      console.log("Raw Payload:", scannedResult);
 
-      if (isUrl) {
-        resultTypeBadge.textContent = "WEB LINK";
-        resultTypeBadge.className = "bg-emerald-500 text-white text-[10px] font-extrabold px-2 py-0.5 rounded-full uppercase tracking-wider";
-        btnOpenLink.href = payload.trim();
-        btnOpenLink.classList.remove('hidden');
+      let parsed = {
+        sl: 'N/A',
+        name: 'N/A',
+        phone: 'N/A',
+        id: 'N/A',
+        status: 'Unpaid'
+      };
+
+      // Extract pipe-separated key-value pairs
+      const parts = scannedResult.split('|');
+      parts.forEach(part => {
+        const keyValue = part.split(':');
+        if (keyValue.length >= 2) {
+          const key = keyValue[0].trim().toLowerCase();
+          const value = keyValue.slice(1).join(':').trim();
+          
+          if (key === 'sl') parsed.sl = value;
+          if (key === 'name') parsed.name = value;
+          if (key === 'phone') parsed.phone = value;
+          if (key === 'id') parsed.id = value;
+          if (key === 'status') parsed.status = value;
+        }
+      });
+
+      // If plain text isn't pipe separated, attempt basic fallback regex search
+      if (parsed.name === 'N/A' && !scannedResult.includes('|')) {
+        parsed.name = scannedResult;
+      }
+
+      // Populate Ticket Card Fields
+      ticketSl.textContent = parsed.sl;
+      ticketIdTop.textContent = parsed.id;
+      ticketIdBottom.textContent = parsed.id;
+      ticketName.textContent = parsed.name;
+      ticketPhone.textContent = parsed.phone;
+
+      // Check Status Condition ("Paid" vs "Unpaid")
+      const isPaid = parsed.status.trim().toLowerCase() === 'paid';
+
+      if (isPaid) {
+        // GOLDEN GRADIENT STYLING FOR PAID
+        ticketCard.className = "ticket-container ticket-paid w-full p-6 text-center mb-6";
+        ticketBadgeTitle.textContent = "GOLDEN TICKET";
+        ticketStatusPill.textContent = "VERIFIED • PAID";
+        ticketStatusPill.className = "inline-block px-4 py-1.5 rounded-full text-xs font-black tracking-widest uppercase shadow-sm border border-emerald-900 bg-emerald-900 text-gold-light";
       } else {
-        resultTypeBadge.textContent = "TEXT / DATA";
-        resultTypeBadge.className = "bg-gold text-primary-dark text-[10px] font-extrabold px-2 py-0.5 rounded-full uppercase tracking-wider";
-        btnOpenLink.classList.add('hidden');
+        // GRAY GRADIENT STYLING FOR UNPAID
+        ticketCard.className = "ticket-container ticket-unpaid w-full p-6 text-center mb-6";
+        ticketBadgeTitle.textContent = "STANDARD TICKET";
+        ticketStatusPill.textContent = "UNPAID / PENDING";
+        ticketStatusPill.className = "inline-block px-4 py-1.5 rounded-full text-xs font-black tracking-widest uppercase shadow-sm border border-red-900 bg-red-800 text-white";
       }
 
       setActiveView('result');
     }
 
-    // Switch Front/Back Camera
+    // Camera Hardware Toggles
     async function switchCamera() {
       if (availableCameras.length <= 1) {
         showToast('অন্য কোনো ক্যামেরা ডিভাইস নেই', 'info');
@@ -483,7 +557,6 @@
       showToast('ক্যামেরা পরিবর্তন হচ্ছে...', 'info');
       await stopCameraScanner();
       
-      // Re-start with new camera ID
       html5QrcodeScanner = new Html5Qrcode("reader");
       await html5QrcodeScanner.start(
         currentCameraId, 
@@ -494,16 +567,11 @@
       checkFlashSupport();
     }
 
-    // Flash Support Check & Toggle
     async function checkFlashSupport() {
       try {
         if (html5QrcodeScanner && html5QrcodeScanner.isScanning) {
           const capabilities = html5QrcodeScanner.getRunningTrackCapabilities();
-          if (!capabilities.torch) {
-            btnToggleFlash.style.opacity = '0.5';
-          } else {
-            btnToggleFlash.style.opacity = '1';
-          }
+          btnToggleFlash.style.opacity = !capabilities.torch ? '0.5' : '1';
         }
       } catch (e) {
         btnToggleFlash.style.opacity = '0.5';
@@ -515,9 +583,7 @@
 
       try {
         isFlashOn = !isFlashOn;
-        await html5QrcodeScanner.applyVideoConstraints({
-          advanced: [{ torch: isFlashOn }]
-        });
+        await html5QrcodeScanner.applyVideoConstraints({ advanced: [{ torch: isFlashOn }] });
         updateFlashIcon();
         showToast(isFlashOn ? 'ফ্ল্যাশ লাইট চালু' : 'ফ্ল্যাশ লাইট বন্ধ', 'info');
       } catch (err) {
@@ -528,53 +594,20 @@
     }
 
     function updateFlashIcon() {
-      if (isFlashOn) {
-        flashIcon.className = "fa-solid fa-bolt text-gold";
-      } else {
-        flashIcon.className = "fa-solid fa-bolt text-slate-300";
-      }
+      flashIcon.className = isFlashOn ? "fa-solid fa-bolt text-gold" : "fa-solid fa-bolt text-slate-300";
     }
 
-    // Copy to Clipboard fallback safely for iframe environment
-    function copyToClipboard(text) {
-      try {
-        const textArea = document.createElement("textarea");
-        textArea.value = text;
-        textArea.style.position = "fixed";
-        textArea.style.left = "-999999px";
-        document.body.appendChild(textArea);
-        textArea.select();
-        document.execCommand('copy');
-        document.body.removeChild(textArea);
-        
-        copyBtnText.textContent = "কপি করা হয়েছে!";
-        showToast("ক্লিপবোর্ডে কপি সম্পন্ন!", "success");
-        setTimeout(() => { copyBtnText.textContent = "কপি করুন"; }, 2000);
-      } catch (err) {
-        showToast("কপি করা সম্ভব হয়নি", "error");
-      }
-    }
-
-    // EVENT LISTENERS
+    // Event Listeners
     btnStartScan.addEventListener('click', startCameraScanner);
-    
     btnStopScan.addEventListener('click', async () => {
       await stopCameraScanner();
       setActiveView('initial');
     });
-
     btnSwitchCamera.addEventListener('click', switchCamera);
     btnToggleFlash.addEventListener('click', toggleFlash);
+    btnScanAgain.addEventListener('click', startCameraScanner);
 
-    btnCopyText.addEventListener('click', () => {
-      if (scannedPayload) copyToClipboard(scannedPayload);
-    });
-
-    btnScanAgain.addEventListener('click', () => {
-      startCameraScanner();
-    });
-
-    // PWA Add to Home Screen Prompt Handling
+    // PWA Installation Events
     window.addEventListener('beforeinstallprompt', (e) => {
       e.preventDefault();
       deferredPrompt = e;
@@ -585,36 +618,23 @@
       if (deferredPrompt) {
         deferredPrompt.prompt();
         const { outcome } = await deferredPrompt.userChoice;
-        if (outcome === 'accepted') {
-          showToast('অ্যাপ ইন্সটল করা হয়েছে!', 'success');
-        }
+        if (outcome === 'accepted') showToast('অ্যাপ ইন্সটল করা হয়েছে!', 'success');
         deferredPrompt = null;
         pwaInstallBtn.classList.add('hidden');
       }
     });
 
-    // Inline Service Worker Registration for PWA Offline Capability
+    // PWA Service Worker Registration
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
         const swCode = `
           const CACHE_NAME = 'mahafil-qr-v1';
-          self.addEventListener('install', (e) => {
-            self.skipWaiting();
-          });
-          self.addEventListener('activate', (e) => {
-            e.waitUntil(clients.claim());
-          });
-          self.addEventListener('fetch', (e) => {
-            e.respondWith(
-              fetch(e.request).catch(() => caches.match(e.request))
-            );
-          });
+          self.addEventListener('install', (e) => self.skipWaiting());
+          self.addEventListener('activate', (e) => e.waitUntil(clients.claim()));
+          self.addEventListener('fetch', (e) => e.respondWith(fetch(e.request).catch(() => caches.match(e.request))));
         `;
         const blob = new Blob([swCode], { type: 'text/javascript' });
-        const swUrl = URL.createObjectURL(blob);
-        
-        navigator.serviceWorker.register(swUrl)
-          .then(() => console.log('PWA Service Worker Registered'))
+        navigator.serviceWorker.register(URL.createObjectURL(blob))
           .catch(err => console.log('SW Registration failed:', err));
       });
     }
